@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>PXLNOVA Proxy</title>
+    <title>PXLNOVA Proxy Browser</title>
     <link rel="stylesheet" href="/assets/styles.css">
     <link rel="icon" href="/assets/w.png" type="image/x-icon">
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; }
+        html, body { margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; }
         header { display: flex; align-items: center; padding: 10px; background-color: #6a1b9a; color: white; }
         #url-bar { flex: 1; padding: 10px; margin: 0 10px; }
         #nav-buttons { display: flex; gap: 10px; }
@@ -17,7 +17,7 @@
         .tab.active { background-color: #9c4dcc; color: white; }
         #bookmark-bar { display: flex; gap: 10px; padding: 10px; background-color: #f1f1f1; }
         .bookmark { padding: 5px 10px; background-color: #ddd; cursor: pointer; }
-        iframe { display: none; width: 100%; height: 80vh; border: none; }
+        iframe { display: none; width: 100%; height: calc(100vh - 112px); border: none; }
     </style>
 </head>
 <body>
@@ -58,7 +58,7 @@
             }
             tabHistory[activeTabId].push(url);
             currentTabIndex[activeTabId]++;
-            iframe.src = url;
+            iframe.src = `/proxy?url=${encodeURIComponent(url)}`;
             iframe.style.display = 'block';
             updateBookmarks(url);
         }
@@ -104,7 +104,7 @@
         document.querySelectorAll('iframe').forEach(iframe => iframe.style.display = 'none');
 
         document.getElementById(`iframe-${tabId}`).style.display = 'block';
-        document.querySelector(`.tab:nth-child(${tabId})`).classList.add('active');
+        document.querySelectorAll('.tab')[tabId - 1].classList.add('active');
         activeTabId = tabId;
     }
 
