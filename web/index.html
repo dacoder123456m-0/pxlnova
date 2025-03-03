@@ -4,136 +4,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>PXLNOVA Proxy Browser</title>
+    <title>PXLNOVA</title>
     <link rel="stylesheet" href="/assets/styles.css">
     <link rel="icon" href="/assets/w.png" type="image/x-icon">
     <style>
-        html, body { margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; }
-        header { display: flex; align-items: center; padding: 10px; background-color: #6a1b9a; color: white; }
-        #url-bar { flex: 1; padding: 10px; margin: 0 10px; }
-        #nav-buttons { display: flex; gap: 10px; }
-        #tabs { display: flex; border-bottom: 1px solid #ccc; }
-        .tab { padding: 10px 20px; cursor: pointer; }
-        .tab.active { background-color: #9c4dcc; color: white; }
-        #bookmark-bar { display: flex; gap: 10px; padding: 10px; background-color: #f1f1f1; }
-        .bookmark { padding: 5px 10px; background-color: #ddd; cursor: pointer; }
-        iframe { display: none; width: 100%; height: calc(100vh - 112px); border: none; }
+        body {
+            margin: 0;
+            overflow: hidden; /* Ensure no scrollbars */
+            display: flex;
+            flex-direction: column;
+        }
+        .tabs {
+            display: flex;
+            background-color: #f1f1f1;
+        }
+        .tab {
+            padding: 10px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #e7e7e7;
+        }
+        .tab.active {
+            background-color: #fff;
+            border-bottom: none;
+        }
+        .tab-content {
+            flex: 1;
+            position: relative;
+        }
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none; /* Initially hidden */
+        }
+        #urlBar {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+        }
+        #backButton, #forwardButton, #reloadButton {
+            padding: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-
-<header>
-    <h1>PXLNOVA Proxy</h1>
-    <input type="text" id="url-bar" placeholder="Enter URL or Search..." onkeydown="handleUrlInput(event)">
-    <div id="nav-buttons">
-        <button onclick="navigate(-1)">Back</button>
-        <button onclick="navigate(1)">Forward</button>
-        <button onclick="reloadPage()">Reload</button>
-        <button onclick="addTab()">+</button>
-        <button onclick="removeTab()">-</button>
+    <header>
+        <img src="/assets/w.png" alt="pxlnova" class="logo">
+        <h1>pxlnova!</h1>
+        <p class="subtext">a modern web search engine!</p>
+    </header>
+    <div class="tabs" id="tabContainer"></div>
+    <input type="text" id="urlBar" placeholder="Enter URL or search...">
+    <div id="controls">
+        <button id="backButton">Back</button>
+        <button id="forwardButton">Forward</button>
+        <button id="reloadButton">Reload</button>
+        <button id="newTabButton">New Tab</button>
     </div>
-</header>
+    <div class="tab-content" id="tabContent"></div>
 
-<div id="tabs"></div>
-<div id="iframe-container"></div>
-<div id="bookmark-bar"></div>
+    <script>
+        let tabCount = 0;
+        const tabContainer = document.getElementById('tabContainer');
+        const tabContent = document.getElementById('tabContent');
+        const urlBar = document.getElementById('urlBar');
 
-<script>
-    let activeTabId = 1;
-    let tabHistory = { 1: [] };
-    let currentTabIndex = { 1: -1 };
+        function createTab(url) {
+            const tabId = `tab-${tabCount++}`;
+            const tab = document.createElement('div');
+            tab.className = 'tab active';
+            tab.innerText = `Tab ${tabCount}`;
+            tab.onclick = () => switchTab(tabId);
+            tabContainer.appendChild(tab);
 
-    function handleUrlInput(event) {
-        if (event.key === "Enter") {
-            const url = document.getElementById('url-bar').value;
-            loadWebsite(url);
-        }
-    }
-
-    function loadWebsite(url) {
-        const iframe = document.getElementById(`iframe-${activeTabId}`);
-        if (iframe) {
-            if (!tabHistory[activeTabId]) {
-                tabHistory[activeTabId] = [];
-                currentTabIndex[activeTabId] = -1;
-            }
-            tabHistory[activeTabId].push(url);
-            currentTabIndex[activeTabId]++;
-            iframe.src = `/proxy?url=${encodeURIComponent(url)}`;
+            const iframe = document.createElement('iframe');
+            iframe.id = tabId;
+            iframe.src = url;
             iframe.style.display = 'block';
-            updateBookmarks(url);
-        }
-    }
+            tabContent.appendChild(iframe);
 
-    function navigate(direction) {
-        const history = tabHistory[activeTabId];
-        if (history) {
-            const index = currentTabIndex[activeTabId] + direction;
-            if (index >= 0 && index < history.length) {
-                currentTabIndex[activeTabId] = index;
-                loadWebsite(history[index]);
+            switchTab(tabId);
+        }
+
+        function switchTab(tabId) {
+            const iframes = tabContent.getElementsByTagName('iframe');
+            const tabs = tabContainer.getElementsByClassName('tab');
+
+            for (let i = 0; i < iframes.length; i++) {
+                iframes[i].style.display = 'none';
+                tabs[i].classList.remove('active');
             }
+
+            document.getElementById(tabId).style.display = 'block';
+            const activeTab = Array.from(tabs).find(tab => tab.innerText.includes(tabId.split('-')[1]));
+            if (activeTab) activeTab.classList.add('active');
         }
-    }
 
-    function reloadPage() {
-        const iframe = document.getElementById(`iframe-${activeTabId}`);
-        if (iframe) {
-            iframe.contentWindow.location.reload();
-        }
-    }
+        document.getElementById('newTabButton').onclick = () => {
+            const url = urlBar.value || 'https://mathisfun-aml.pages.dev'; // Default URL
+            createTab(url);
+        };
 
-    function addTab() {
-        activeTabId++;
-        const tab = document.createElement('div');
-        tab.classList.add('tab', 'active');
-        tab.innerText = `Tab ${activeTabId}`;
-        tab.onclick = () => setActiveTab(activeTabId);
-        document.getElementById('tabs').appendChild(tab);
+        document.getElementById('reloadButton').onclick = () => {
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                const iframe = document.getElementById(activeTab.innerText.split(' ')[1]);
+                iframe.contentWindow.location.reload();
+            }
+        };
 
-        const iframe = document.createElement('iframe');
-        iframe.id = `iframe-${activeTabId}`;
-        document.getElementById('iframe-container').appendChild(iframe);
+                document.getElementById('backButton').onclick = () => {
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                const iframe = document.getElementById(activeTab.innerText.split(' ')[1]);
+                if (iframe.contentWindow.history.length > 1) {
+                    iframe.contentWindow.history.back();
+                }
+            }
+        };
 
-        tabHistory[activeTabId] = [];
-        currentTabIndex[activeTabId] = -1;
-        setActiveTab(activeTabId);
-    }
+        document.getElementById('forwardButton').onclick = () => {
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                const iframe = document.getElementById(activeTab.innerText.split(' ')[1]);
+                if (iframe.contentWindow.history.length > 0) {
+                    iframe.contentWindow.history.forward();
+                }
+            }
+        };
 
-    function removeTab() {
-        if (activeTabId > 1) {
-            document.getElementById(`iframe-${activeTabId}`).remove();
-            document.querySelector(`.tab:nth-child(${activeTabId})`).remove();
-            delete tabHistory[activeTabId];
-            activeTabId--;
-            setActiveTab(activeTabId);
-        }
-    }
+        urlBar.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const activeTab = document.querySelector('.tab.active');
+                if (activeTab) {
+                    const iframe = document.getElementById(activeTab.innerText.split(' ')[1]);
+                    const url = urlBar.value.startsWith('http') ? urlBar.value : 'https://duckduckgo.com/?q=' + encodeURIComponent(urlBar.value);
+                    iframe.src = url;
+                }
+            }
+        });
 
-    function setActiveTab(tabId) {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('iframe').forEach(iframe => iframe.style.display = 'none');
-
-        document.getElementById(`iframe-${tabId}`).style.display = 'block';
-        document.querySelectorAll('.tab')[tabId - 1].classList.add('active');
-        activeTabId = tabId;
-    }
-
-    function updateBookmarks(url) {
-        const bookmarkBar = document.getElementById('bookmark-bar');
-        const existingBookmark = Array.from(bookmarkBar.children).find(bookmark => bookmark.innerText === url);
-        if (!existingBookmark) {
-            const bookmark = document.createElement('div');
-            bookmark.classList.add('bookmark');
-            bookmark.innerText = url;
-            bookmark.onclick = () => loadWebsite(url);
-            bookmarkBar.appendChild(bookmark);
-        }
-    }
-
-    // Initialize with one tab
-    addTab();
-</script>
-
+        // Initialize with a default tab
+        createTab('https://mathisfun-aml.pages.dev');
+    </script>
 </body>
 </html>
