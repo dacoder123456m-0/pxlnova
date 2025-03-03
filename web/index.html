@@ -30,6 +30,7 @@
         <button onclick="navigate(1)">Forward</button>
         <button onclick="reloadPage()">Reload</button>
         <button onclick="addTab()">+</button>
+        <button onclick="removeTab()">-</button>
     </div>
 </header>
 
@@ -97,6 +98,16 @@
         tabHistory[activeTabId] = [];
         currentTabIndex[activeTabId] = -1;
         setActiveTab(activeTabId);
+    }
+
+    function removeTab() {
+        if (activeTabId > 1) {
+            document.getElementById(`iframe-${activeTabId}`).remove();
+            document.querySelector(`.tab:nth-child(${activeTabId})`).remove();
+            delete tabHistory[activeTabId];
+            activeTabId--;
+            setActiveTab(activeTabId);
+        }
     }
 
     function setActiveTab(tabId) {
